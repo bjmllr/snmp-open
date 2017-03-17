@@ -23,7 +23,7 @@ module SNMP
       def get(oids)
         return enum_for(:get, oids) unless block_given?
         texts = oids.map { |o| File.read(File.join(@directory, 'get', o)) }
-        Parser.new(oids).parse(texts).each { |*args| yield(*args) }
+        Parser.new(oids).parse(texts).each { |arg, *| yield(arg) }
       rescue Errno::ENOENT => err
         if @warnings
           oids.each do |oid|
