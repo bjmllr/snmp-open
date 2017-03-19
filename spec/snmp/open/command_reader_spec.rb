@@ -9,7 +9,7 @@ describe SNMP::Open::CommandReader do
       expect do
         snmp = SNMP::Open::CommandReader.new(host: 'blah')
         snmp.capture('blah', 'blah')
-      end.to raise_error('ng')
+      end.to raise_error(SNMP::Open::CommandError, 'ng')
     end
   end
 

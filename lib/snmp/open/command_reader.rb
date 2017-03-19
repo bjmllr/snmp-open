@@ -38,7 +38,7 @@ module SNMP
 
       def capture(cmd, oid, options = {})
         out, err = Open3.capture3(cli(cmd, oid, options))
-        raise err.chomp unless err.empty?
+        raise CommandError, err.chomp unless err.empty?
         out
       end
 
@@ -71,5 +71,7 @@ module SNMP
         end
       end
     end # class CommandReader
+
+    class CommandError < RuntimeError; end
   end # class Open
 end # module SNMP
