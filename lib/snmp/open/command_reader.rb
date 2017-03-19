@@ -12,6 +12,10 @@ module SNMP
         auth_protocol: '-a',
         community: '-c',
         context: '-n',
+        no_check_increasing: {
+          'snmpbulkwalk' => '-Cc',
+          'snmpwalk' => '-Cc'
+        },
         numeric: '-On', # needed by parser, should always be enabled
         priv_password: '-X', # not recommended, see snmp.conf(5)
         priv_protocol: '-x',
@@ -20,6 +24,12 @@ module SNMP
         retries: '-r',
         timeout: '-t',
         host: nil
+      }.freeze
+
+      OPTION_VALUES = {
+        no_check_increasing: {
+          true => ''
+        }.freeze
       }.freeze
 
       # +options+ accepts options dealing with making connections to the host,
@@ -33,7 +43,8 @@ module SNMP
       def initialize(options)
         host = options.delete(:host) ||
                (raise ArgumentError, 'Host expected but not given')
-        @host_options = merge_options(options).merge('-On' => nil, host => nil)
+        opts = merge_options(options).merge('-On' => nil, host => nil)
+        @command_options, @host_options = partition_options(opts)
       end
 
       def capture(cmd, oid, options = {})
@@ -44,15 +55,13 @@ module SNMP
 
       # Generate a CLI command string
       def cli(command, id = nil, options = {})
-        command = case command
-                  when Symbol then "snmp#{command}"
-                  else             command.to_s
-                  end
+        command = normalize_command(command)
 
         [
           command,
           *options.map { |k, v| "#{k}#{v}" },
           *@host_options.map { |k, v| "#{k}#{v}" },
+          *@command_options.fetch(command, {}).map { |k, v| "#{k}#{v}" },
           *id
         ].join(' ')
       end
@@ -62,12 +71,47 @@ module SNMP
       def merge_options(options = {})
         options.each_pair.with_object({}) do |(key, value), opts|
           if OPTIONS.key?(key)
-            opts[OPTIONS[key]] = value
+            opts[OPTIONS[key]] =
+              (OPTION_VALUES.fetch(key, {}).fetch(value, value) || next)
           elsif key.is_a?(String)
             opts[key] = value
           else
             raise "Unknown option #{key}"
           end
+        end
+      end
+
+      def normalize_command(command)
+        case command
+        when Symbol then "snmp#{command}"
+        else             command.to_s
+        end
+      end
+
+      def partition_options(options)
+        command_keys, host_keys = options
+                                  .keys
+                                  .partition { |k| k.is_a?(Hash) }
+
+        [
+          merge_command_options(options, command_keys),
+          merge_host_options(options, host_keys)
+        ]
+      end
+
+      def merge_command_options(options, keys)
+        keys.each.with_object({}) do |commands, hash|
+          command_value = options[commands]
+          commands.each_pair do |command, option|
+            hash[command] ||= {}
+            hash[command][option] = command_value
+          end
+        end
+      end
+
+      def merge_host_options(options, keys)
+        keys.each.with_object({}) do |key, hash|
+          hash[key] = options[key]
         end
       end
     end # class CommandReader
