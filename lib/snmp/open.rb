@@ -73,7 +73,7 @@ module SNMP
     def get(oids)
       return enum_for(:get, oids) unless block_given?
       texts = oids.map { |oid| capture_command(:get, oid) }
-      Parser.new(oids).parse(texts).each { |arg, *| yield(arg) }
+      Parser.new(oids).parse(texts).first.each { |arg| yield(arg) }
     end
 
     # Perform an SNMP walk using the "snmpwalk" or "snmpbulkwalk" commands and
