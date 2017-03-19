@@ -79,11 +79,10 @@ module SNMP
     # Perform an SNMP walk using the "snmpwalk" or "snmpbulkwalk" commands and
     # parse the output
     def walk(oids, **kwargs)
-      kwargs = { bulk: true, non_repeaters: 0, max_repetitions: 10 }
-               .merge(kwargs)
       return enum_for(:walk, oids, **kwargs) unless block_given?
+      bulk = kwargs.fetch(:bulk, true)
+      options = walk_options(bulk, **kwargs)
       cmd = bulk ? :bulkwalk : :walk
-      options = bulk ? { '-Cn' => non_repeaters, '-Cr' => max_repetitions } : {}
       texts = oids.map { |oid| capture_command(cmd, oid, options) }
       Parser.new(oids).parse(texts).each { |*args| yield(*args) }
     end
@@ -105,6 +104,17 @@ module SNMP
         else
           raise "Unknown option #{key}"
         end
+      end
+    end
+
+    def walk_options(bulk, **kwargs)
+      if bulk
+        {
+          '-Cn' => kwargs.fetch(:non_repeaters, 0),
+          '-Cr' => kwargs.fetch(:max_repetitions, 10)
+        }
+      else
+        {}
       end
     end
   end # class Open
