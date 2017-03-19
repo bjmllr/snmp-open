@@ -1,5 +1,5 @@
-require 'open3'
 require 'snmp/open/parser'
+require 'snmp/open/command_reader'
 
 # Simple Network Management Protocol
 module SNMP
@@ -19,60 +19,17 @@ module SNMP
 
   # Open3-based wrapper for SNMP CLI commands
   class Open
-    attr_reader :options
+    attr_reader :reader
 
-    # see snmpcmd(1) for explanation of options
-    OPTIONS = {
-      version: '-v',
-      auth_password: '-A',
-      auth_protocol: '-a',
-      community: '-c',
-      context: '-n',
-      numeric: '-On', # needed by parser, should always be enabled
-      priv_password: '-X', # not recommended, see snmp.conf(5)
-      priv_protocol: '-x',
-      sec_level: '-l',
-      sec_user: '-u',
-      retries: '-r',
-      timeout: '-t',
-      host: nil
-    }.freeze
-
-    # +options+ accepts options dealing with making connections to the host,
-    # including all of the options listed in the +OPTIONS+ constant hash. Other
-    # options can be given as strings (or any object with a suitable +to_s+
-    # method), e.g., these are equivalent:
-    #
-    #   SNMP::Open.new(host: hostname, timeout: 3, '-m' => miblist)
-    #   SNMP::Open.new(hostname => nil, '-t' => '3', '-m' => miblist)
-    #
+    # see CommandReader for a description of options
     def initialize(options = {})
-      host = options.delete(:host) ||
-             (raise ArgumentError, 'Host expected but not given')
-      @host_options = merge_options(options)
-                      .merge('-On' => nil, host => nil)
-      return if @host_options.key?(nil)
-    end
-
-    # Generate a CLI command string
-    def cli(command, id = nil, options = {})
-      command = case command
-                when Symbol then "snmp#{command}"
-                else             command.to_s
-                end
-
-      [
-        command,
-        *options.map { |k, v| "#{k}#{v}" },
-        *@host_options.map { |k, v| "#{k}#{v}" },
-        *id
-      ].join(' ')
+      @reader = options[:reader] || CommandReader.new(options)
     end
 
     # Perform an SNMP get using the "snmpget" command and parse the output
     def get(oids)
       return enum_for(:get, oids) unless block_given?
-      texts = oids.map { |oid| capture_command(:get, oid) }
+      texts = oids.map { |oid| reader.capture(:get, oid) }
       Parser.new(oids).parse(texts).first.each { |arg| yield(arg) }
     end
 
@@ -83,28 +40,8 @@ module SNMP
       bulk = kwargs.fetch(:bulk, true)
       options = walk_options(bulk, **kwargs)
       cmd = bulk ? :bulkwalk : :walk
-      texts = oids.map { |oid| capture_command(cmd, oid, options) }
+      texts = oids.map { |oid| reader.capture(cmd, oid, options) }
       Parser.new(oids).parse(texts).each { |*args| yield(*args) }
-    end
-
-    private
-
-    def capture_command(cmd, oid, options = {})
-      out, err = Open3.capture3(cli(cmd, oid, options))
-      raise err unless err.empty?
-      out
-    end
-
-    def merge_options(options = {})
-      options.each_pair.with_object({}) do |(key, value), opts|
-        if OPTIONS.key?(key)
-          opts[OPTIONS[key]] = value
-        elsif key.is_a?(String)
-          opts[key] = value
-        else
-          raise "Unknown option #{key}"
-        end
-      end
     end
 
     def walk_options(bulk, **kwargs)
