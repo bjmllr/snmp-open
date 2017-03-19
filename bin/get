@@ -1,0 +1,8 @@
+#!/usr/bin/ruby
+require 'json'
+$LOAD_PATH << File.join(__dir__, '..', 'lib')
+require 'snmp/open'
+
+host = ARGV.fetch(0)
+oids = ARGV[1..-1]
+jj SNMP::Open.new(host: host).get(oids).to_a
