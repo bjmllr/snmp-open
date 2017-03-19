@@ -2,6 +2,17 @@ require 'spec_helper'
 require 'snmp/open/command_reader'
 
 describe SNMP::Open::CommandReader do
+  describe '#capture' do
+    it 'chomps an error' do
+      expect(Open3).to receive(:capture3).with('blah -On blah blah')
+        .and_return(['', "ng\n"])
+      expect do
+        snmp = SNMP::Open::CommandReader.new(host: 'blah')
+        snmp.capture('blah', 'blah')
+      end.to raise_error('ng')
+    end
+  end
+
   describe '#cli' do
     it 'returns the CLI command' do
       snmp = SNMP::Open::CommandReader.new(host: 'example')

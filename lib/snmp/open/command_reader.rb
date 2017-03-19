@@ -38,7 +38,7 @@ module SNMP
 
       def capture(cmd, oid, options = {})
         out, err = Open3.capture3(cli(cmd, oid, options))
-        raise err unless err.empty?
+        raise err.chomp unless err.empty?
         out
       end
 
