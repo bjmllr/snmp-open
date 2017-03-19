@@ -64,6 +64,9 @@ describe SNMP::Open do
           }, {
             oid: '1.3.6.1.2.1.1.6',
             value: ".1.3.6.1.2.1.1.6.0 = \"\"\n"
+          }, {
+            oid: '1.3.6.1.2.1.1.7',
+            value: ".1.3.6.1.2.1.1.7.0 = No Such Instance currently exists at this OID\n"
           }
         ]
       end
@@ -78,7 +81,7 @@ describe SNMP::Open do
 
       it 'gives the type of each value' do
         expect(walks.flatten(1).map(&:type))
-          .to eq ['STRING', 'No Such Object', 'STRING', 'STRING']
+          .to eq ['STRING', 'No Such Object', 'STRING', 'STRING', 'No Such Instance']
       end
 
       it 'extracts multiline strings' do
@@ -94,6 +97,11 @@ describe SNMP::Open do
       it 'extracts quoted strings' do
         expect(walks[0][2].value).to eq 'router1'
         expect(walks[0][3].value).to eq ''
+      end
+
+      it 'converts NoSuchInstance responses' do
+        expect(walks[0][4].type).to eq 'No Such Instance'
+        expect(walks[0][4].value).to be_nil
       end
     end # context 'SYSTEM-MIB' do
 

@@ -13,6 +13,8 @@ module SNMP
     class Parser
       NOSUCHOBJECT_STR =
         'No Such Object available on this agent at this OID'.freeze
+      NOSUCHINSTANCE_STR =
+        'No Such Instance currently exists at this OID'.freeze
 
       def initialize(oids)
         @oids = oids
@@ -21,7 +23,10 @@ module SNMP
       def parse(texts)
         columns = texts.map do |text|
           tokenized =
-            text.gsub(NOSUCHOBJECT_STR, %("#{NOSUCHOBJECT_STR}")).shellsplit
+            text
+            .gsub(NOSUCHOBJECT_STR, %("#{NOSUCHOBJECT_STR}"))
+            .gsub(NOSUCHINSTANCE_STR, %("#{NOSUCHINSTANCE_STR}"))
+            .shellsplit
           parse_tokens(tokenized)
         end
 
@@ -80,12 +85,14 @@ module SNMP
         next_token = tokens.next
         type = next_token.match(/\A([A-Z]+):\z/) { |md| md[1] }
         type, value = parse_value(tokens, next_token, type)
-        [type, convert_value(type, value)]
+        [type, Conversions.convert_value(type, value)]
       end
 
       def parse_value(tokens, token, type)
         if token == NOSUCHOBJECT_STR
           ['No Such Object', nil]
+        elsif token == NOSUCHINSTANCE_STR
+          ['No Such Instance', nil]
         elsif !type
           ['STRING', token]
         else
@@ -109,22 +116,25 @@ module SNMP
         @oids.zip(columns).map do |oid, column|
           indexes.map do |index|
             id = (oid == index ? index : "#{oid}.#{index}")
-            column.find { |o| o.oid == id } || absent_value(id)
+            column.find { |o| o.oid == id } || Conversions.absent_value(id)
           end
         end
       end
 
-      def convert_value(type, value)
-        case type
-        when 'INTEGER'
-          value.to_i
-        else
-          value
+      # functions to generate value objects
+      module Conversions
+        module_function def convert_value(type, value)
+          case type
+          when 'INTEGER'
+            value.to_i
+          else
+            value
+          end
         end
-      end
 
-      def absent_value(id)
-        Value.new(id, 'absent', nil)
+        module_function def absent_value(id)
+          Value.new(id, 'absent', nil)
+        end
       end
     end # class Parser
   end # class Open
