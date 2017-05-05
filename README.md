@@ -36,6 +36,8 @@ end
 
 Naturally, configuration can also be supplied through `snmp.conf(5)`.
 
+Environment variables can be given using the `env` keyword parameter to `SNMP::Open.new`. For example, the `SNMP_PERSISTENT_FILE` and `SNMPCONFPATH` variables are understood by Net-SNMP commands and indicate paths in which to look for configuration files.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

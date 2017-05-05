@@ -41,6 +41,7 @@ module SNMP
       #   SNMP::Open.new(hostname => nil, '-t' => '3', '-m' => miblist)
       #
       def initialize(options)
+        @env = options.delete(:env)
         host = options.delete(:host) ||
                (raise ArgumentError, 'Host expected but not given')
         opts = merge_options(options).merge('-On' => nil, host => nil)
@@ -48,7 +49,11 @@ module SNMP
       end
 
       def capture(cmd, oid, options = {})
-        out, err = Open3.capture3(cli(cmd, oid, options))
+        out, err = if @env
+                     Open3.capture3(@env, cli(cmd, oid, options))
+                   else
+                     Open3.capture3(cli(cmd, oid, options))
+                   end
         raise CommandError, err.chomp unless err.empty?
         out
       end

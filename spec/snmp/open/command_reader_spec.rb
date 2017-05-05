@@ -11,6 +11,15 @@ describe SNMP::Open::CommandReader do
         snmp.capture('blah', 'blah')
       end.to raise_error(SNMP::Open::CommandError, 'ng')
     end
+
+    it 'passes the env to the capture, if given' do
+      expect(Open3).to receive(:capture3)
+        .with({ 'EVAR' => 'VAL' }, 'blah -On blah blah')
+        .and_return(['', ''])
+      snmp =
+        SNMP::Open::CommandReader.new(host: 'blah', env: { 'EVAR' => 'VAL' })
+      snmp.capture('blah', 'blah')
+    end
   end
 
   describe '#cli' do

@@ -6,6 +6,15 @@ describe SNMP::Open do
       expect { SNMP::Open.new(version: '2c', timeout: 3) }
         .to raise_error(/Host expected/)
     end
+
+    it 'accepts env keyword parameter' do
+      snmp = SNMP::Open.new(host: 'example.org', env: { 'EVAR' => 'EVAL' })
+      expect(Open3)
+        .to receive(:capture3)
+        .with({ 'EVAR' => 'EVAL' }, 'snmpget -On example.org 1.2.3.4')
+        .and_return(['', ''])
+      snmp.get(['1.2.3.4']).to_a
+    end
   end # describe 'new' do
 
   describe '#walk' do
