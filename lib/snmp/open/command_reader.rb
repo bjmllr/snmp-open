@@ -54,6 +54,7 @@ module SNMP
                    else
                      Open3.capture3(cli(cmd, oid, options))
                    end
+        raise CommandTimeoutError, err.chomp if err =~ /^timeout/i
         raise CommandError, err.chomp unless err.empty?
         out
       end
@@ -122,5 +123,6 @@ module SNMP
     end # class CommandReader
 
     class CommandError < RuntimeError; end
+    class CommandTimeoutError < CommandError; end
   end # class Open
 end # module SNMP
