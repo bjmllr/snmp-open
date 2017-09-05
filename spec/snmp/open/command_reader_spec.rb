@@ -12,6 +12,16 @@ describe SNMP::Open::CommandReader do
       end.to raise_error(SNMP::Open::CommandError, 'ng')
     end
 
+    it 'raises a precise error for a timeout' do
+      expect(Open3).to receive(:capture3).with('blah -On blah blah')
+        .and_return(['', 'Timeout: No Response from blah.'])
+      expect do
+        snmp = SNMP::Open::CommandReader.new(host: 'blah')
+        snmp.capture('blah', 'blah')
+      end.to raise_error(SNMP::Open::CommandTimeoutError,
+                         'Timeout: No Response from blah.')
+    end
+
     it 'passes the env to the capture, if given' do
       expect(Open3).to receive(:capture3)
         .with({ 'EVAR' => 'VAL' }, 'blah -On blah blah')
