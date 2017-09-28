@@ -35,7 +35,7 @@ module SNMP
 
       private
 
-      def table(columns)
+      def align(columns)
         indexes = columns.first.map { |value| index_using_first_oid(value) }
         hash = columns.flat_map { |row| row.map { |v| [v.oid, v] } }.to_h
 
@@ -97,6 +97,14 @@ module SNMP
           ['STRING', token]
         else
           [type, tokens.next]
+        end
+      end
+
+      def table(columns)
+        if columns.size == 1 && columns.all? { |column| column.size == 1 }
+          columns
+        else
+          align(columns)
         end
       end
 
