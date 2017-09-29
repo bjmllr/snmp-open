@@ -83,7 +83,7 @@ module SNMP
 
       def parse_type(tokens)
         next_token = tokens.next
-        type = next_token.match(/\A([A-Z]+):\z/) { |md| md[1] }
+        type = next_token.match(/\A([-A-Za-z]+):\z/) { |md| md[1] }
         type, value = parse_value(tokens, next_token, type)
         [type, Conversions.convert_value(type, value)]
       end
@@ -95,9 +95,21 @@ module SNMP
           ['No Such Instance', nil]
         elsif !type
           ['STRING', token]
+        elsif type == 'Hex-STRING'
+          parse_value_hex_string(type, tokens)
         else
           [type, tokens.next]
         end
+      end
+
+      def parse_value_hex_string(type, tokens)
+        bytes = []
+        loop do
+          break unless tokens.peek =~ /\A[0-9A-Za-z]{2}\z/
+          bytes << tokens.next
+        end
+        string = bytes.map { |b| b.to_i(16).chr }.join
+        [type, string]
       end
 
       def table(columns)
