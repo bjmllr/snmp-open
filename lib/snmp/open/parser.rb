@@ -1,5 +1,7 @@
 require 'set'
 require 'shellwords'
+require 'snmp/open/parser/constants'
+require 'snmp/open/parser/value_parser'
 
 module SNMP
   class Open
@@ -11,10 +13,7 @@ module SNMP
 
     # convert SNMP command output into arrays
     class Parser
-      NOSUCHOBJECT_STR =
-        'No Such Object available on this agent at this OID'.freeze
-      NOSUCHINSTANCE_STR =
-        'No Such Instance currently exists at this OID'.freeze
+      include SNMP::Open::Parser::Constants
 
       def initialize(oids)
         @oids = oids
@@ -89,27 +88,7 @@ module SNMP
       end
 
       def parse_value(tokens, token, type)
-        if token == NOSUCHOBJECT_STR
-          ['No Such Object', nil]
-        elsif token == NOSUCHINSTANCE_STR
-          ['No Such Instance', nil]
-        elsif !type
-          ['STRING', token]
-        elsif type == 'Hex-STRING'
-          parse_value_hex_string(type, tokens)
-        else
-          [type, tokens.next]
-        end
-      end
-
-      def parse_value_hex_string(type, tokens)
-        bytes = []
-        loop do
-          break unless tokens.peek =~ /\A[0-9A-Za-z]{2}\z/
-          bytes << tokens.next
-        end
-        string = bytes.map { |b| b.to_i(16).chr }.join
-        [type, string]
+        ValueParser.find(type, token).parse(tokens)
       end
 
       def table(columns)
