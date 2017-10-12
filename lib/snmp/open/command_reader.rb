@@ -16,7 +16,9 @@ module SNMP
           'snmpbulkwalk' => '-Cc',
           'snmpwalk' => '-Cc'
         },
-        numeric: '-On', # needed by parser, should always be enabled
+        no_units: '-OU',
+        non_symbolic: '-Oe',
+        numeric: '-On',
         priv_password: '-X', # not recommended, see snmp.conf(5)
         priv_protocol: '-x',
         sec_level: '-l',
@@ -24,6 +26,15 @@ module SNMP
         retries: '-r',
         timeout: '-t',
         host: nil
+      }.freeze
+
+      # On some systems, SNMP command outputs will include symbolic OID names,
+      # symbolic values, and/or value units. The parser doesn't support these,
+      # so disable them.
+      OPTIONS_FOR_PARSER = {
+        '-Oe' => nil,
+        '-On' => nil,
+        '-OU' => nil
       }.freeze
 
       OPTION_VALUES = {
@@ -44,7 +55,9 @@ module SNMP
         @env = options.delete(:env)
         host = options.delete(:host) ||
                (raise ArgumentError, 'Host expected but not given')
-        opts = merge_options(options).merge('-On' => nil, host => nil)
+        opts = OPTIONS_FOR_PARSER
+               .merge(merge_options(options))
+               .merge(host => nil)
         @command_options, @host_options = partition_options(opts)
       end
 

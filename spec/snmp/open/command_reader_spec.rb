@@ -4,7 +4,7 @@ require 'snmp/open/command_reader'
 describe SNMP::Open::CommandReader do
   describe '#capture' do
     it 'chomps an error' do
-      expect(Open3).to receive(:capture3).with('blah -On blah blah')
+      expect(Open3).to receive(:capture3).with('blah -Oe -On -OU blah blah')
         .and_return(['', "ng\n"])
       expect do
         snmp = SNMP::Open::CommandReader.new(host: 'blah')
@@ -13,7 +13,7 @@ describe SNMP::Open::CommandReader do
     end
 
     it 'raises a precise error for a timeout' do
-      expect(Open3).to receive(:capture3).with('blah -On blah blah')
+      expect(Open3).to receive(:capture3).with('blah -Oe -On -OU blah blah')
         .and_return(['', 'Timeout: No Response from blah.'])
       expect do
         snmp = SNMP::Open::CommandReader.new(host: 'blah')
@@ -24,7 +24,7 @@ describe SNMP::Open::CommandReader do
 
     it 'passes the env to the capture, if given' do
       expect(Open3).to receive(:capture3)
-        .with({ 'EVAR' => 'VAL' }, 'blah -On blah blah')
+        .with({ 'EVAR' => 'VAL' }, 'blah -Oe -On -OU blah blah')
         .and_return(['', ''])
       snmp =
         SNMP::Open::CommandReader.new(host: 'blah', env: { 'EVAR' => 'VAL' })
@@ -35,22 +35,22 @@ describe SNMP::Open::CommandReader do
   describe '#cli' do
     it 'returns the CLI command' do
       snmp = SNMP::Open::CommandReader.new(host: 'example')
-      expect(snmp.cli(:bulkwalk)).to eq 'snmpbulkwalk -On example'
+      expect(snmp.cli(:bulkwalk)).to eq 'snmpbulkwalk -Oe -On -OU example'
     end
 
     it 'accepts a version option through the constructor' do
       snmp = SNMP::Open::CommandReader.new(host: 'example', version: '2c')
-      expect(snmp.cli(:bulkwalk)).to eq 'snmpbulkwalk -v2c -On example'
+      expect(snmp.cli(:bulkwalk)).to eq 'snmpbulkwalk -Oe -On -OU -v2c example'
     end
 
     it 'accepts a user option using -u through the constructor' do
       snmp = SNMP::Open::CommandReader.new(host: 'example', '-u' => 'doe')
-      expect(snmp.cli(:bulkwalk)).to eq 'snmpbulkwalk -udoe -On example'
+      expect(snmp.cli(:bulkwalk)).to eq 'snmpbulkwalk -Oe -On -OU -udoe example'
     end
 
     it 'accepts an object ID' do
       snmp = SNMP::Open::CommandReader.new(host: 'example')
-      expect(snmp.cli(:bulkwalk, '1.2.3.4')).to eq 'snmpbulkwalk -On example 1.2.3.4'
+      expect(snmp.cli(:bulkwalk, '1.2.3.4')).to eq 'snmpbulkwalk -Oe -On -OU example 1.2.3.4'
     end
 
     context 'for no_check_increasing' do
@@ -60,17 +60,17 @@ describe SNMP::Open::CommandReader do
 
       it 'includes -Cc for bulkwalk' do
         expect(snmp.cli(:bulkwalk, '1.2.3.4'))
-          .to eq 'snmpbulkwalk -On example -Cc 1.2.3.4'
+          .to eq 'snmpbulkwalk -Oe -On -OU example -Cc 1.2.3.4'
       end
 
       it 'omits -Cc on get' do
         expect(snmp.cli(:get, '1.2.3.4'))
-          .to eq 'snmpget -On example 1.2.3.4'
+          .to eq 'snmpget -Oe -On -OU example 1.2.3.4'
       end
 
       it 'includes -Cc for walk' do
         expect(snmp.cli(:walk, '1.2.3.4'))
-          .to eq 'snmpwalk -On example -Cc 1.2.3.4'
+          .to eq 'snmpwalk -Oe -On -OU example -Cc 1.2.3.4'
       end
     end
   end # describe '#to_s' do

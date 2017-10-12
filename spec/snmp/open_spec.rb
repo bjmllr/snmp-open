@@ -11,7 +11,7 @@ describe SNMP::Open do
       snmp = SNMP::Open.new(host: 'example.org', env: { 'EVAR' => 'EVAL' })
       expect(Open3)
         .to receive(:capture3)
-        .with({ 'EVAR' => 'EVAL' }, 'snmpget -On example.org 1.2.3.4')
+        .with({ 'EVAR' => 'EVAL' }, 'snmpget -Oe -On -OU example.org 1.2.3.4')
         .and_return(['', ''])
       snmp.get(['1.2.3.4']).to_a
     end
@@ -31,7 +31,7 @@ describe SNMP::Open do
       objects.each do |object|
         expect(Open3)
           .to receive(:capture3)
-          .with("snmpbulkwalk -Cn0 -Cr10 -On example #{object[:oid]}")
+          .with("snmpbulkwalk -Cn0 -Cr10 -Oe -On -OU example #{object[:oid]}")
           .and_return([object[:value], ''])
       end
     end
