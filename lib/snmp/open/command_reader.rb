@@ -1,50 +1,13 @@
 require 'open3'
+require 'snmp/open/options'
 
 module SNMP
   class Open
     # Open3-based data source that executes an snmp* command and captures the
     # output
     class CommandReader
-      # see snmpcmd(1) for explanation of options
-      OPTIONS = {
-        version: '-v',
-        auth_password: '-A',
-        auth_protocol: '-a',
-        community: '-c',
-        context: '-n',
-        no_check_increasing: {
-          'snmpbulkwalk' => '-Cc',
-          'snmpwalk' => '-Cc'
-        },
-        no_units: '-OU',
-        non_symbolic: '-Oe',
-        numeric: '-On',
-        priv_password: '-X', # not recommended, see snmp.conf(5)
-        priv_protocol: '-x',
-        sec_level: '-l',
-        sec_user: '-u',
-        retries: '-r',
-        timeout: '-t',
-        host: nil
-      }.freeze
-
-      # On some systems, SNMP command outputs will include symbolic OID names,
-      # symbolic values, and/or value units. The parser doesn't support these,
-      # so disable them.
-      OPTIONS_FOR_PARSER = {
-        '-Oe' => nil,
-        '-On' => nil,
-        '-OU' => nil
-      }.freeze
-
-      OPTION_VALUES = {
-        no_check_increasing: {
-          true => ''
-        }.freeze
-      }.freeze
-
       # +options+ accepts options dealing with making connections to the host,
-      # including all of the options listed in the +OPTIONS+ constant hash.
+      # including all of the options listed in the +Options::MAP+ constant hash.
       # Other options can be given as strings (or any object with a suitable
       # +to_s+ method), e.g., these are equivalent:
       #
@@ -55,7 +18,7 @@ module SNMP
         @env = options.delete(:env)
         host = options.delete(:host) ||
                (raise ArgumentError, 'Host expected but not given')
-        opts = OPTIONS_FOR_PARSER
+        opts = Options::REQUIRED_BY_PARSER
                .merge(merge_options(options))
                .merge(host => nil)
         @command_options, @host_options = partition_options(opts)
@@ -89,9 +52,9 @@ module SNMP
 
       def merge_options(options = {})
         options.each_pair.with_object({}) do |(key, value), opts|
-          if OPTIONS.key?(key)
-            opts[OPTIONS[key]] =
-              (OPTION_VALUES.fetch(key, {}).fetch(value, value) || next)
+          if Options::MAP.key?(key)
+            opts[Options::MAP[key]] =
+              (Options::VALUES.fetch(key, {}).fetch(value, value) || next)
           elsif key.is_a?(String)
             opts[key] = value
           else
