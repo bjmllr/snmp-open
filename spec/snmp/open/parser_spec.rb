@@ -33,6 +33,13 @@ module SNMP
         expect(parsed).to eq [[Value.new('1.2.3.9', 'INTEGER', 1)]]
       end
 
+      it 'handles an unquoted empty string' do
+        parser = Parser.new(['1.2.3'])
+        texts = [".1.2.3.1 = STRING: \n.1.2.3.4 = INTEGER: 1\n"]
+        parsed = parser.parse(texts)
+        expect(parsed.map { |e| e.first.value }).to eq ['', 1]
+      end
+
       it 'handles multiline values' do
         texts = [".1.3.6.1.2.1.1.9.1.3.72 = STRING: \"Capabilities for ACME-SONET-MIB.\n\n\n      - acmeSonetAxsmCapability is for \n\n        ATM Switch Service Module(ASSM).\n\n\n\n      - acmeSonetAxsmCapabilityV2 is for \n\n        ATM Switch Service Module(ASSM).\n\n\n\n      - acmeSonet\"\n"]
 
