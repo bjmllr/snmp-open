@@ -41,6 +41,17 @@ module SNMP
         expect(parsed[0][0].value).to match(/ATM Switch Service Module/)
       end
 
+      it 'handles no more variables response' do
+        texts = [
+          ".1.2.3 = INTEGER: 1\n"\
+          ".1.2.3 = No more variables left in this MIB View (It is past the end of the MIB tree)\n"
+        ]
+
+        parser = Parser.new(['1.2.3'])
+        parsed = parser.parse(texts)
+        expect(parsed[0][0].value).to eq 1
+      end
+
       it 'fills in missing entries with null values' do
         texts = [<<-ONE, <<-TWO, <<-THREE]
           .1.2.3.4.1 = "a"

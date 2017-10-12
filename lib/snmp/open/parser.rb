@@ -25,6 +25,7 @@ module SNMP
             text
             .gsub(NOSUCHOBJECT_STR, %("#{NOSUCHOBJECT_STR}"))
             .gsub(NOSUCHINSTANCE_STR, %("#{NOSUCHINSTANCE_STR}"))
+            .gsub(NOMOREVARIABLES_STR, %("#{NOMOREVARIABLES_STR}"))
             .shellsplit
           parse_tokens(tokenized)
         end
@@ -82,6 +83,7 @@ module SNMP
 
       def parse_type(tokens)
         next_token = tokens.next
+        raise StopIteration, next_token if next_token == NOMOREVARIABLES_STR
         type = next_token.match(/\A([-A-Za-z]+):\z/) { |md| md[1] }
         type, value = parse_value(tokens, next_token, type)
         [type, Conversions.convert_value(type, value)]
