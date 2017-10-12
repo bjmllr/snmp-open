@@ -23,9 +23,7 @@ module SNMP
         columns = texts.map do |text|
           tokenized =
             text
-            .gsub(NOSUCHOBJECT_STR, %("#{NOSUCHOBJECT_STR}"))
-            .gsub(NOSUCHINSTANCE_STR, %("#{NOSUCHINSTANCE_STR}"))
-            .gsub(NOMOREVARIABLES_STR, %("#{NOMOREVARIABLES_STR}"))
+            .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
             .shellsplit
           parse_tokens(tokenized)
         end
@@ -83,7 +81,6 @@ module SNMP
 
       def parse_type(tokens)
         next_token = tokens.next
-        raise StopIteration, next_token if next_token == NOMOREVARIABLES_STR
         type = next_token.match(/\A([-A-Za-z]+):\z/) { |md| md[1] }
         type, value = parse_value(tokens, next_token, type)
         [type, Conversions.convert_value(type, value)]
@@ -136,6 +133,21 @@ module SNMP
         module_function def absent_value(id)
           Value.new(id, 'absent', nil)
         end
+      end
+
+      # static messages from net-snmp commands
+      module Static
+        include SNMP::Open::Parser::Constants
+
+        MESSAGES = [
+          NOSUCHOBJECT_STR,
+          NOSUCHINSTANCE_STR,
+          NOMOREVARIABLES_STR
+        ].freeze
+
+        ANY_MESSAGE = Regexp.union(*MESSAGES)
+
+        QUOTED_MESSAGES = MESSAGES.map { |v| [v, %("#{v}")] }.to_h.freeze
       end
     end # class Parser
   end # class Open
