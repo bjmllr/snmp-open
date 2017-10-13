@@ -19,6 +19,19 @@ module SNMP
           @parse
         end
 
+        # parses BITS
+        class Bits < ValueParser
+          def parse(tokens)
+            return @parse if @parse
+            bytes = []
+            loop do
+              break unless tokens.peek =~ /\A[0-9A-Za-z]{1,2}\z/
+              bytes << tokens.next.to_i(16)
+            end
+            @parse = [@type, bytes]
+          end
+        end # class Bits < ValueParser
+
         # parses objects with no explicit type
         class Default < ValueParser
           def initialize(_type, token)
@@ -99,6 +112,7 @@ module SNMP
 
         KNOWN_TYPES = {
           nil => Default,
+          'BITS' => Bits,
           'INTEGER'   => ValueParser::Integer,
           'Gauge32'   => ValueParser::Integer,
           'Gauge64'   => ValueParser::Integer,

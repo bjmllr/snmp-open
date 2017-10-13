@@ -17,6 +17,16 @@ module SNMP
         expect(parsed[0][0]).to eq Value.new('1.2.3.0', 'No Such Object', nil)
       end
 
+      it 'parses BITS' do
+        parser = Parser.new(['1.2.3'])
+        texts = [".1.2.3.0 = BITS: 01 2 FF\n.1.2.3.4 = INTEGER: 90\n"]
+        expected = [[Value.new('1.2.3.0', 'BITS', [1, 2, 255])],
+                    [Value.new('1.2.3.4', 'INTEGER', 90)]]
+
+        parsed = parser.parse(texts)
+        expect(parsed.to_a).to eq expected
+      end
+
       it 'parses a Counter32' do
         parser = Parser.new(['1.2.3'])
         texts = ['.1.2.3.0 = Counter32: 51']
