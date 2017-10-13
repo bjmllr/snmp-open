@@ -17,6 +17,15 @@ module SNMP
         expect(parsed[0][0]).to eq Value.new('1.2.3.0', 'No Such Object', nil)
       end
 
+      it 'parses a Hex-STRING' do
+        parser = Parser.new(['1.2.3'])
+        texts = [".1.2.3.0 = Hex-STRING: 41 56 4D 31 38 30 34 55 30 01\n"]
+        expected = [[Value.new('1.2.3.0', 'Hex-STRING', "AVM1804U0\x01")]]
+
+        parsed = parser.parse(texts)
+        expect(parsed.to_a).to eq expected
+      end
+
       it 'handles a single result with an unexpected OID' do
         parser = Parser.new(['1.2.3.4'])
         texts = [".1.2.3.9 = INTEGER: 1\n"]
