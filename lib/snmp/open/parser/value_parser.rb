@@ -26,6 +26,13 @@ module SNMP
           end
         end # class Default
 
+        # parses integer-like objects
+        class Integer < ValueParser
+          def parse(tokens)
+            @parse ||= [@type, Integer(tokens.next)]
+          end
+        end
+
         # parses objects identified like '= Hex-STRING:'
         class HexString < ValueParser
           def parse(tokens)
@@ -92,6 +99,11 @@ module SNMP
 
         KNOWN_TYPES = {
           nil => Default,
+          'INTEGER'   => ValueParser::Integer,
+          'Gauge32'   => ValueParser::Integer,
+          'Gauge64'   => ValueParser::Integer,
+          'Counter32' => ValueParser::Integer,
+          'Counter64' => ValueParser::Integer,
           'Hex-STRING' => HexString,
           'Timeticks' => Timeticks
         }.freeze
