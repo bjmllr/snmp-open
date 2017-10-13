@@ -82,7 +82,7 @@ module SNMP
 
       def parse_type(tokens)
         next_token = tokens.next
-        type = next_token.match(/\A([-A-Za-z]+):\z/) { |md| md[1] }
+        type = next_token.match(/\A([-A-Za-z]+[0-9]*):\z/) { |md| md[1] }
         type, value = parse_value(tokens, next_token, type)
         [type, Conversions.convert_value(type, value)]
       end

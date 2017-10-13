@@ -17,6 +17,33 @@ module SNMP
         expect(parsed[0][0]).to eq Value.new('1.2.3.0', 'No Such Object', nil)
       end
 
+      it 'parses a Counter32' do
+        parser = Parser.new(['1.2.3'])
+        texts = ['.1.2.3.0 = Counter32: 51']
+        expected = [[Value.new('1.2.3.0', 'Counter32', 51)]]
+
+        parsed = parser.parse(texts)
+        expect(parsed.to_a).to eq expected
+      end
+
+      it 'parses an INTEGER' do
+        parser = Parser.new(['1.2.3'])
+        texts = ['.1.2.3.0 = INTEGER: 01']
+        expected = [[Value.new('1.2.3.0', 'INTEGER', 1)]]
+
+        parsed = parser.parse(texts)
+        expect(parsed.to_a).to eq expected
+      end
+
+      it 'parses a Gauge32' do
+        parser = Parser.new(['1.2.3'])
+        texts = ['.1.2.3.0 = Gauge32: 15']
+        expected = [[Value.new('1.2.3.0', 'Gauge32', 15)]]
+
+        parsed = parser.parse(texts)
+        expect(parsed.to_a).to eq expected
+      end
+
       it 'parses a Hex-STRING' do
         parser = Parser.new(['1.2.3'])
         texts = [".1.2.3.0 = Hex-STRING: 41 56 4D 31 38 30 34 55 30 01\n"]
