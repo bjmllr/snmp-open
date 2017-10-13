@@ -23,8 +23,7 @@ module SNMP
         columns = texts.map do |text|
           tokenized =
             text
-            .gsub(NOSUCHOBJECT_STR, %("#{NOSUCHOBJECT_STR}"))
-            .gsub(NOSUCHINSTANCE_STR, %("#{NOSUCHINSTANCE_STR}"))
+            .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
             .shellsplit
           parse_tokens(tokenized)
         end
@@ -134,6 +133,21 @@ module SNMP
         module_function def absent_value(id)
           Value.new(id, 'absent', nil)
         end
+      end
+
+      # static messages from net-snmp commands
+      module Static
+        include SNMP::Open::Parser::Constants
+
+        MESSAGES = [
+          NOSUCHOBJECT_STR,
+          NOSUCHINSTANCE_STR,
+          NOMOREVARIABLES_STR
+        ].freeze
+
+        ANY_MESSAGE = Regexp.union(*MESSAGES)
+
+        QUOTED_MESSAGES = MESSAGES.map { |v| [v, %("#{v}")] }.to_h.freeze
       end
     end # class Parser
   end # class Open

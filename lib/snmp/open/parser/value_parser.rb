@@ -40,6 +40,13 @@ module SNMP
           end
         end # class HexString
 
+        # handles messages indicating the end of the response
+        class Stop < ValueParser
+          def parse(*)
+            raise StopIteration, @token
+          end
+        end
+
         # handles objects not handled by any other parser
         class Other < ValueParser
           def parse(tokens)
@@ -63,7 +70,8 @@ module SNMP
 
         KNOWN_TOKENS = {
           NOSUCHINSTANCE_STR => NoSuchInstance,
-          NOSUCHOBJECT_STR =>  NoSuchObject
+          NOSUCHOBJECT_STR =>  NoSuchObject,
+          NOMOREVARIABLES_STR => Stop
         }.freeze
 
         KNOWN_TYPES = {
