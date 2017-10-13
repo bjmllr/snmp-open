@@ -53,15 +53,6 @@ module SNMP
         expect(parsed.to_a).to eq expected
       end
 
-      it 'parses Timeticks' do
-        parser = Parser.new(['1.2.3'])
-        texts = ['.1.2.3.0 = Timeticks: (16651183) 1 day, 22:15:11.83']
-        expected = [[Value.new('1.2.3.0', 'Timeticks', 16_651_183)]]
-
-        parsed = parser.parse(texts)
-        expect(parsed.to_a).to eq expected
-      end
-
       it 'handles a single result with an unexpected OID' do
         parser = Parser.new(['1.2.3.4'])
         texts = [".1.2.3.9 = INTEGER: 1\n"]
@@ -74,6 +65,13 @@ module SNMP
         texts = [".1.2.3.1 = STRING: \n.1.2.3.4 = INTEGER: 1\n"]
         parsed = parser.parse(texts)
         expect(parsed.map { |e| e.first.value }).to eq ['', 1]
+      end
+
+      it 'handles an unquoted multi-word string' do
+        parser = Parser.new(['1.2.3'])
+        texts = [".1.2.3.1 = STRING: one two three\n.1.2.3.4 = INTEGER: 1\n"]
+        parsed = parser.parse(texts)
+        expect(parsed.map { |e| e.first.value }).to eq ['one two three', 1]
       end
 
       it 'handles multiline values' do
