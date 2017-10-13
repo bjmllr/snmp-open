@@ -47,6 +47,22 @@ module SNMP
           end
         end
 
+        # parses objects identified like '= Timeticks:'
+        # note that 1 second = 100 ticks
+        class Timeticks < ValueParser
+          def parse(tokens)
+            return @parse if @parse
+            ticks = tokens.next.tr('()', '').to_i
+
+            # consume tokens through one like 23:59:59.99
+            loop do
+              break if tokens.next =~ /\A\d\d:\d\d:\d\d.\d\d\z/
+            end
+
+            @parse = [@type, ticks]
+          end
+        end # class Timeticks
+
         # handles objects not handled by any other parser
         class Other < ValueParser
           def parse(tokens)
@@ -76,7 +92,8 @@ module SNMP
 
         KNOWN_TYPES = {
           nil => Default,
-          'Hex-STRING' => HexString
+          'Hex-STRING' => HexString,
+          'Timeticks' => Timeticks
         }.freeze
       end # class ValueParser
     end # class Parser
