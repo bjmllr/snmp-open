@@ -23,8 +23,8 @@ module SNMP
         columns = texts.map do |text|
           tokenized =
             text
-            .gsub(/([0-9\.]+) = STRING: ((?!")[^\n]*)\n/,
-                  %(\\1 = STRING: "\\2"\n))
+            .gsub(/^([0-9\.]+) = (Opaque|STRING): ((?!")[^\n]*)\n/,
+                  %(\\1 = \\2: "\\3"\n))
             .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
             .shellsplit
           parse_tokens(tokenized)
