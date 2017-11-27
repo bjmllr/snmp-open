@@ -4,7 +4,7 @@ require 'snmp/open/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'snmp-open'
-  spec.version       = Snmp::Open::VERSION
+  spec.version       = SNMP::Open::VERSION
   spec.authors       = ['Ben Miller']
   spec.email         = ['bmiller@rackspace.com']
 
