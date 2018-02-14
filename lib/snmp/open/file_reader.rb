@@ -13,19 +13,36 @@ module SNMP
     # be used to generate a needed file, if the file is unavailable. Controlled
     # by the `warnings` option.
     class FileReader
+      DEFAULT_WARNING_FORMATTER = lambda { |gen, cmd, oid, outfile|
+        "#{gen.cli(cmd, oid)} > #{outfile}"
+      }
+
       def initialize(directory, options = {})
         @directory = directory
         @warnings = options.delete(:warnings)
-        @command_generator =
-          SNMP::Open::CommandReader.new(options.merge(host: '$OPTIONS'))
+        @make_directories = options.delete(:make_directories)
+        if @warnings && !@warnings.respond_to?(:call)
+          @warnings = DEFAULT_WARNING_FORMATTER
+        end
+        options[:host] ||= '$OPTIONS'
+        @command_generator = SNMP::Open::CommandReader.new(options)
       end
 
       def capture(cmd, oid, _options = {})
-        outfile = File.join(cmd.to_s, oid)
-        File.read(File.join(@directory, outfile))
+        mkdir(@directory, cmd.to_s) if @make_directories
+        outfile = File.join(@directory, cmd.to_s, oid)
+        File.read(outfile)
       rescue Errno::ENOENT => err
-        warn "#{@command_generator.cli(cmd, oid)} > #{outfile}" if @warnings
+        if @warnings
+          warning = @warnings.call(@command_generator, cmd, oid, outfile)
+          warn warning
+        end
         raise err
+      end
+
+      def mkdir(base, cmd)
+        Dir.mkdir(base) unless File.exist?(base)
+        Dir.mkdir(File.join(base, cmd)) unless File.exist?(File.join(base, cmd))
       end
     end # class FileReader
   end # class Open
