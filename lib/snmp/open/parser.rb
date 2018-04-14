@@ -69,7 +69,7 @@ module SNMP
 
         objects
       rescue StopIteration
-        return objects
+        objects
       end
 
       def parse_next_object(tokens)

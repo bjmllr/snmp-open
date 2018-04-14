@@ -4,7 +4,8 @@ require 'snmp/open/command_reader'
 describe SNMP::Open::CommandReader do
   describe '#capture' do
     it 'chomps an error' do
-      expect(Open3).to receive(:capture3).with('blah -Oe -On -OU blah blah')
+      expect(Open3).to receive(:capture3)
+        .with('blah -Oe -On -OU blah blah')
         .and_return(['', "ng\n"])
       expect do
         snmp = SNMP::Open::CommandReader.new(host: 'blah')
@@ -13,7 +14,8 @@ describe SNMP::Open::CommandReader do
     end
 
     it 'raises a precise error for a timeout' do
-      expect(Open3).to receive(:capture3).with('blah -Oe -On -OU blah blah')
+      expect(Open3).to receive(:capture3)
+        .with('blah -Oe -On -OU blah blah')
         .and_return(['', 'Timeout: No Response from blah.'])
       expect do
         snmp = SNMP::Open::CommandReader.new(host: 'blah')
