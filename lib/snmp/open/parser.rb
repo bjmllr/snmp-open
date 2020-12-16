@@ -14,6 +14,7 @@ module SNMP
     # convert SNMP command output into arrays
     class Parser
       include SNMP::Open::Parser::Constants
+      OID_RE = Regexp.union(/\S+-MIB::\S+/, /[0-9\.]+/)
 
       def initialize(oids)
         @oids = oids
@@ -21,12 +22,8 @@ module SNMP
 
       def parse(texts)
         columns = texts.map do |text|
-          tokenized =
-            text
-            .gsub(/^([0-9\.]+) = (Opaque|STRING): ((?!")[^\n]*)\n/,
-                  %(\\1 = \\2: "\\3"\n))
-            .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
-            .shellsplit
+          clean = clean_input_text(text)
+          tokenized = clean.shellsplit
           parse_tokens(tokenized)
         end
 
@@ -45,6 +42,16 @@ module SNMP
             hash.fetch(oid) { Value.new(oid, 'absent', nil) }
           end
         end
+      end
+
+      def clean_input_text(text)
+        text
+          .gsub(/\r\n|\n\r|\r/, "\n")
+          .gsub(/^(#{OID_RE})\s*=\s*(Opaque|STRING):\s*\n/,
+                %(\\1 = \\2: ""\n))
+          .gsub(/^(#{OID_RE}) = (Opaque|STRING): ((?!")[^\n]*)\n/,
+                %(\\1 = \\2: "\\3"\n))
+          .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
       end
 
       def index_using_first_oid(value)
@@ -74,7 +81,7 @@ module SNMP
 
       def parse_next_object(tokens)
         oid = tokens.next.sub(/\A\./, '')
-        raise "Parse error at #{oid}" unless oid =~ /\A[0-9.]+\z/
+        raise "Parse error at #{oid}" unless oid =~ OID_RE
         equals = tokens.next
         raise "Parse error after #{oid}" unless equals == '='
         type, value = parse_type(tokens)

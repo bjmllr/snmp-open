@@ -30,8 +30,7 @@ module SNMP
                    else
                      Open3.capture3(cli(cmd, oid, options))
                    end
-        raise CommandTimeoutError, err.chomp if err =~ /^timeout/i
-        raise CommandError, err.chomp unless err.empty?
+        raise_capture_errors(err)
         out
       end
 
@@ -42,6 +41,7 @@ module SNMP
         [
           command,
           *options.map { |k, v| "#{k}#{v}" },
+          *oid_options(id),
           *@host_options.map { |k, v| "#{k}#{v}" },
           *@command_options.fetch(command, {}).map { |k, v| "#{k}#{v}" },
           *id
@@ -49,6 +49,19 @@ module SNMP
       end
 
       private
+
+      def raise_capture_errors(err)
+        case err
+        when /^Cannot find module \(([^)]+)\)/
+          raise UnknownMIBError, "Unknown MIB: #{Regexp.last_match(1)}"
+        when /^(\S+): Unknown Object Identifier$/
+          raise UnknownOIDError, "Unknown OID: #{Regexp.last_match(1)}"
+        when /^timeout/i
+          raise CommandTimeoutError, err.chomp
+        when /./
+          raise CommandError, err.chomp
+        end
+      end
 
       def merge_options(options = {})
         options.each_pair.with_object({}) do |(key, value), opts|
@@ -60,6 +73,15 @@ module SNMP
           else
             raise "Unknown option #{key}"
           end
+        end
+      end
+
+      # if the request OID is all-numeric, force numeric OID in the output
+      def oid_options(id)
+        if id =~ /[^0-9.]/
+          []
+        else
+          ['-On']
         end
       end
 
@@ -100,5 +122,7 @@ module SNMP
 
     class CommandError < RuntimeError; end
     class CommandTimeoutError < CommandError; end
+    class UnknownMIBError < CommandError; end
+    class UnknownOIDError < CommandError; end
   end # class Open
 end # module SNMP
