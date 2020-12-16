@@ -24,12 +24,10 @@ module SNMP
         host: nil
       }.freeze
 
-      # On some systems, SNMP command outputs will include symbolic OID names,
-      # symbolic values, and/or value units. The parser doesn't support these,
-      # so disable them.
+      # On some systems, SNMP command outputs will include symbolic values
+      # and/or value units. The parser doesn't support these, so disable them.
       REQUIRED_BY_PARSER = {
         '-Oe' => nil,
-        '-On' => nil,
         '-OU' => nil
       }.freeze
 
