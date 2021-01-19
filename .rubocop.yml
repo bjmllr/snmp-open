@@ -8,6 +8,10 @@ Lint/MissingSuper:
   Exclude:
     - 'lib/snmp/open/parser/value_parser.rb'
 
+Metrics/ClassLength:
+  Exclude:
+    - 'lib/snmp/open/parser.rb'
+
 Style/AccessModifierDeclarations: {Enabled: false}
 Style/IfUnlessModifier: {Enabled: false}
 Style/FrozenStringLiteralComment: {Enabled: false}

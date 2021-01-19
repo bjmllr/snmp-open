@@ -110,6 +110,16 @@ module SNMP
         expect(parsed[0][0].value).to match(/ATM Switch Service Module/)
       end
 
+      it 'handles unquoted multiline values where there is no "="' do
+        # this is somewhat arbitrary, but it is reasonable to assume any line
+        # not containing an equals sign is a continuation of the previous line
+        texts = [".1.3.6.1.2.1.1.1.0 = STRING: Acme Giant Rubber Band (Acme GRB9K Series),  Version 1.2.3[Default]\r\nCopyright (c) 1949 by Acme Corporation, Inc.\n"]
+
+        parser = Parser.new(['1.3.6.1.2.1.1.1'])
+        parsed = parser.parse(texts)
+        expect(parsed[0][0].value).to match(/Version.*\nCopyright/)
+      end
+
       it 'handles no more variables response' do
         texts = [
           ".1.2.3 = INTEGER: 1\n"\
