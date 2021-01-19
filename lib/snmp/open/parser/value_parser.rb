@@ -23,9 +23,11 @@ module SNMP
         class Bits < ValueParser
           def parse(tokens)
             return @parse if @parse
+
             bytes = []
             loop do
               break unless tokens.peek =~ /\A[0-9A-Za-z]{1,2}\z/
+
               bytes << tokens.next.to_i(16)
             end
             @parse = [@type, bytes]
@@ -50,9 +52,11 @@ module SNMP
         class HexString < ValueParser
           def parse(tokens)
             return @parse if @parse
+
             bytes = []
             loop do
               break unless tokens.peek =~ /\A[0-9A-Za-z]{2}\z/
+
               bytes << tokens.next
             end
             string = bytes.map { |b| b.to_i(16).chr }.join
@@ -72,6 +76,7 @@ module SNMP
         class Timeticks < ValueParser
           def parse(tokens)
             return @parse if @parse
+
             ticks = tokens.next.tr('()', '').to_i
 
             # consume tokens through one like 23:59:59.99
@@ -106,16 +111,16 @@ module SNMP
 
         KNOWN_TOKENS = {
           NOSUCHINSTANCE_STR => NoSuchInstance,
-          NOSUCHOBJECT_STR =>  NoSuchObject,
+          NOSUCHOBJECT_STR => NoSuchObject,
           NOMOREVARIABLES_STR => Stop
         }.freeze
 
         KNOWN_TYPES = {
           nil => Default,
           'BITS' => Bits,
-          'INTEGER'   => ValueParser::Integer,
-          'Gauge32'   => ValueParser::Integer,
-          'Gauge64'   => ValueParser::Integer,
+          'INTEGER' => ValueParser::Integer,
+          'Gauge32' => ValueParser::Integer,
+          'Gauge64' => ValueParser::Integer,
           'Counter32' => ValueParser::Integer,
           'Counter64' => ValueParser::Integer,
           'Hex-STRING' => HexString,

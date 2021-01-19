@@ -1,8 +1,10 @@
+inherit_from: ../.rubocop.yml
+
 Metrics/BlockLength:
   Enabled: false
 Metrics/ClassLength:
   Enabled: false
-Metrics/LineLength:
+Layout/LineLength:
   Enabled: false
 Naming/HeredocDelimiterNaming:
   Enabled: false

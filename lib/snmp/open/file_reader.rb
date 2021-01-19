@@ -32,12 +32,12 @@ module SNMP
         mkdir(@directory, cmd.to_s) if @make_directories
         outfile = File.join(@directory, cmd.to_s, oid)
         File.read(outfile)
-      rescue Errno::ENOENT => err
+      rescue Errno::ENOENT => e
         if @warnings
           warning = @warnings.call(@command_generator, cmd, oid, outfile)
           warn warning
         end
-        raise err
+        raise e
       end
 
       def mkdir(base, cmd)

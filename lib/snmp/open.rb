@@ -27,16 +27,18 @@ module SNMP
     end
 
     # Perform an SNMP get using the "snmpget" command and parse the output
-    def get(oids)
+    def get(oids, &block)
       return enum_for(:get, oids) unless block_given?
+
       texts = oids.map { |oid| reader.capture(:get, oid) }
-      Parser.new(oids).parse(texts).fetch(0, []).each { |arg| yield(arg) }
+      Parser.new(oids).parse(texts).fetch(0, []).each(&block)
     end
 
     # Perform an SNMP walk using the "snmpwalk" or "snmpbulkwalk" commands and
     # parse the output
     def walk(oids, **kwargs)
       return enum_for(:walk, oids, **kwargs) unless block_given?
+
       bulk = kwargs.fetch(:bulk, true)
       options = walk_options(bulk, **kwargs)
       cmd = bulk ? :bulkwalk : :walk
