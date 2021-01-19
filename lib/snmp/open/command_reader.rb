@@ -121,8 +121,11 @@ module SNMP
     end # class CommandReader
 
     class CommandError < RuntimeError; end
+
     class CommandTimeoutError < CommandError; end
+
     class UnknownMIBError < CommandError; end
+
     class UnknownOIDError < CommandError; end
   end # class Open
 end # module SNMP

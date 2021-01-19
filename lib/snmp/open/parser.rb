@@ -14,7 +14,7 @@ module SNMP
     # convert SNMP command output into arrays
     class Parser
       include SNMP::Open::Parser::Constants
-      OID_RE = Regexp.union(/\S+-MIB::\S+/, /[0-9\.]+/)
+      OID_RE = Regexp.union(/\S+-MIB::\S+/, /[0-9.]+/)
 
       def initialize(oids)
         @oids = oids
@@ -82,8 +82,10 @@ module SNMP
       def parse_next_object(tokens)
         oid = tokens.next.sub(/\A\./, '')
         raise "Parse error at #{oid}" unless oid =~ OID_RE
+
         equals = tokens.next
         raise "Parse error after #{oid}" unless equals == '='
+
         type, value = parse_type(tokens)
         Value.new(oid, type, value)
       end
