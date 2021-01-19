@@ -49,7 +49,7 @@ module SNMP
           .gsub(/\r\n|\n\r|\r/, "\n")
           .gsub(/^(#{OID_RE})\s*=\s*(Opaque|STRING):\s*\n/,
                 %(\\1 = \\2: ""\n))
-          .gsub(/^(#{OID_RE}) = (Opaque|STRING): ((?!")[^\n]*)\n/,
+          .gsub(/^(#{OID_RE}) = (Opaque|STRING): ((?!")[^\n]*(\n(?!#{OID_RE})[^\n]+)*)\n/,
                 %(\\1 = \\2: "\\3"\n))
           .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
       end
