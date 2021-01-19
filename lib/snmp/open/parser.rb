@@ -15,8 +15,8 @@ module SNMP
     class Parser
       include SNMP::Open::Parser::Constants
       OID_RE = Regexp.union(/\S+-MIB::\S+/, /[0-9.]+/)
-      EMPTY_STRING_RE = /^(#{OID_RE})\s*=\s*(Opaque|STRING):\s*\n/.freeze
-      STRING_RE = /^(#{OID_RE}) = (Opaque|STRING): ((?!")[^\n]*(\n(?!#{OID_RE} = )[^\n]+)*)\n/.freeze
+      EMPTY_STRING_RE = /^(#{OID_RE})\s+=\s+(Opaque|STRING):\s*\n/.freeze
+      STRING_RE = /^(#{OID_RE})\s+=\s+(Opaque|STRING):\s+((?!")[^\n]*(\n(?!#{OID_RE}\s+=\s+)[^\n]+)*)\n/.freeze
 
       def initialize(oids)
         @oids = oids
