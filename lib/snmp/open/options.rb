@@ -12,6 +12,7 @@ module SNMP
           'snmpbulkwalk' => '-Cc',
           'snmpwalk' => '-Cc'
         },
+        no_mib_name: '-Os',
         no_units: '-OU',
         non_symbolic: '-Oe',
         non_symbolic_table_indexes: '-Ob',
