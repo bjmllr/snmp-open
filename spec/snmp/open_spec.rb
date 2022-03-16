@@ -7,7 +7,7 @@ describe SNMP::Open do
         .to raise_error(/Host expected/)
     end
 
-    it 'accepts env keyword parameter' do
+    fit 'accepts env keyword parameter' do
       snmp = SNMP::Open.new(host: 'example.org', env: { 'EVAR' => 'EVAL' })
       expect(Open3)
         .to receive(:capture3)
