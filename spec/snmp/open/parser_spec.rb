@@ -170,6 +170,29 @@ module SNMP
 
         expect(parser.parse(texts)).to eq expectation
       end
+
+      it 'errors on mismatched request and response' do
+        parser = Parser.new(['NOSUCH-MIB::nsFirstThing',
+                             'NOSUCH-MIB::nsSecondThing'])
+        texts = [
+          "NOSUCH-MIB::nsThirdThing.1 = INTEGER: 90\n",
+          "NOSUCH-MIB::nsFourthThing.1 = INTEGER: 90\n"
+        ]
+        expect do
+          parser.parse(texts)
+        end.to raise_error("Received ID doesn't start with the given ID")
+      end
+
+      it 'ignores requested MIB name missing from response' do
+        parser = Parser.new(['NOSUCH-MIB::nsFirstThing',
+                             'NOSUCH-MIB::nsSecondThing'])
+        texts = [
+          "nsFirstThing.1 = INTEGER: 90\n",
+          "nsSecondThing.1 = INTEGER: 90\n"
+        ]
+        parsed = parser.parse(texts)
+        expect(parsed[0][0]).to eq Value.new('nsFirstThing.1', 'INTEGER', 90)
+      end
     end
   end # class Open
 end # module SNMP

@@ -63,15 +63,22 @@ module SNMP
       private
 
       def align(columns)
-        indexes = columns.first.map { |value| index_using_first_oid(value) }
+        indexes = indexes_from_columns(columns)
+        bases = bases_from_columns(columns)
         hash = columns.flat_map { |row| row.map { |v| [v.oid, v] } }.to_h
 
         indexes.map do |index|
-          @oids.map do |base|
+          bases.map do |base, _|
             oid = [base, *index].join('.')
             hash.fetch(oid) { Value.new(oid, 'absent', nil) }
           end
         end
+      end
+
+      def bases_from_columns(columns)
+        @oids
+          .zip(columns.map(&:first).map(&:oid))
+          .map { |base, oid| split_oid(base, oid) }
       end
 
       def clean_input_text(text)
@@ -82,16 +89,8 @@ module SNMP
           .gsub(Static::ANY_MESSAGE, Static::QUOTED_MESSAGES)
       end
 
-      def index_using_first_oid(value)
-        base = @oids.first
-
-        if base == value.oid
-          nil
-        elsif value.oid.start_with?(base)
-          value.oid.gsub(/\A#{base}\.?/, '')
-        else
-          raise "Received ID doesn't start with the given ID"
-        end
+      def indexes_from_columns(columns)
+        columns.first.map { |value| split_oid(@oids.first, value.oid)[1] }
       end
 
       def parse_tokens(tokens)
@@ -122,6 +121,21 @@ module SNMP
         token = tokens.next
         type = token.match(/\A([-A-Za-z]+[0-9]*):\z/) { |md| md[1] }
         ValueParser.find(type, token).parse(tokens)
+      end
+
+      # split a complete OID into a base and index, given an expected base
+      # raises if the base isn't present
+      def split_oid(base, oid)
+        if base == oid
+          [base, nil]
+        elsif oid.start_with?(base)
+          [base, oid.sub(/\A#{base}\.?/, '')]
+        elsif base.include?('::') && !oid.include?('::')
+          alternate_base = base.sub(/\A[^:]+::/, '')
+          split_oid(alternate_base, oid)
+        else
+          raise "Received ID doesn't start with the given ID"
+        end
       end
 
       def table(columns)
